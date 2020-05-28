@@ -1,0 +1,11 @@
+[package]
+name = "rusciify"
+version = "0.1.0"
+
+[dependencies]
+quicli = "0.4"
+structopt = "0.2"
+termcolor = "1.1.0"
+image = "0.23.0"
+imageproc = "0.20.0"
+rusttype = "0.8.2"
