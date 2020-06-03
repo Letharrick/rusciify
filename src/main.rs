@@ -41,7 +41,7 @@ struct Ruscii {
     #[structopt(long="sample-scale", short="s", default_value="5", help="The scale of the NxN pixel sample that is used for ASCII conversion")]
     sample_scale: u32,
 
-    #[structopt(long="coloured", short="c", help="Whether or not the ASCII will retain the input image's colour")]
+    #[structopt(long="colour", short="c", help="A custom colour for the ASCII output")]
     colour: Vec<u8>,
 
     #[structopt(long="map", short="m", default_value=" .:-=+*#%@", help="The ASCII mapping to use for converting samples to characters")]
