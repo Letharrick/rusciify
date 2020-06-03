@@ -42,7 +42,7 @@ struct Ruscii {
     sample_scale: u32,
 
     #[structopt(long="coloured", short="c", help="Whether or not the ASCII will retain the input image's colour")]
-    coloured: bool,
+    colour: Vec<u8>,
 
     #[structopt(long="map", short="m", default_value=" .:-=+*#%@", help="The ASCII mapping to use for converting samples to characters")]
     map: String,
@@ -68,7 +68,7 @@ struct Ascii {
 }
 
 impl Ascii {
-    fn new(image: &DynamicImage, sample_size: (u32, u32), coloured: bool) -> Self {
+    fn new(image: &DynamicImage, sample_size: (u32, u32)) -> Self {
         let image_dimensions = image.dimensions();
 
         let ascii_dimensions = (
@@ -89,18 +89,10 @@ impl Ascii {
 
                 let average_pixel = Ascii::average_pixels(sample.pixels()).unwrap();
 
-                let colour = {
-                    if coloured {
-                        average_pixel.to_rgba()
-                    } else {
-                        [255; 4].into()
-                    }
-                };
-
                 cells.push(
                     Cell {
                         position: (x, y),
-                        colour
+                        colour: average_pixel.to_rgba()
                     }
                 );
             }
@@ -112,15 +104,18 @@ impl Ascii {
         }
     }
 
-    fn print(&self, ascii_map: &[char]) {
+    fn print(&self, ascii_map: &[char], colour: Option<[u8; 4]>) {
         let mut stdout = termcolor::StandardStream::stdout(ColorChoice::Always);
         
         for cell in &self.cells {
             let mut stdout = termcolor::StandardStream::stdout(ColorChoice::Always);
-            let colour = Color::Rgb(cell.colour[0], cell.colour[1], cell.colour[2]);
+            let cell_colour = Color::Rgb(cell.colour[0], cell.colour[1], cell.colour[2]);
+
+            let colour = colour.unwrap_or(cell.colour.0);
+            let colour = Some(Color::Rgb(colour[0], colour[1], colour[2]));
 
             stdout.set_color(
-                &ColorSpec::new().set_fg(Some(colour))
+                &ColorSpec::new().set_fg(colour)
             );
 
             print!("{}", cell.as_ascii(ascii_map));
@@ -133,7 +128,7 @@ impl Ascii {
         stdout.reset();
     }
 
-    fn as_image(&self, ascii_map: &[char], font: Font, font_size: f32) -> Result<ImageBuffer<Rgba<u8>, Vec<u8>>, Box<dyn std::error::Error>> {
+    fn as_image(&self, ascii_map: &[char], colour: Option<[u8; 4]>, font: Font, font_size: f32) -> Result<ImageBuffer<Rgba<u8>, Vec<u8>>, Box<dyn std::error::Error>> {
         let mut img = ImageBuffer::from_pixel(
             self.dimensions.0 * font_size as u32,
             self.dimensions.1 * font_size as u32,
@@ -141,9 +136,12 @@ impl Ascii {
         );
 
         for cell in &self.cells {
+            let colour = colour.unwrap_or(cell.colour.0);
+            let colour = Rgba(colour);
+
             imageproc::drawing::draw_text_mut(
                 &mut img,
-                cell.colour,
+                colour,
                 cell.position.0 * font_size as u32, cell.position.1 * font_size as u32,
                 rusttype::Scale::uniform(font_size),
                 &font,
@@ -194,22 +192,29 @@ fn main() -> CliResult {
         }
     };
     let map: Vec<char> = args.map.chars().collect();
+    let colour = {
+        if args.colour.len() == 3 {
+            Some([args.colour[0], args.colour[1], args.colour[2], 255])
+        } else {
+            None
+        }
+    };
 
     println!("Converting image to ASCII...");
     let image = image::open(args.input).expect("Error - Failed to open image ");
-    let ascii = Ascii::new(&image, sample_size, args.coloured);
+    let ascii = Ascii::new(&image, sample_size);
     println!("Success!");
 
     match args.output {
         Some(output_path) => {
             println!("Converting ASCII to image...");
             let font = Font::from_bytes(FONT_BYTES).expect("Errzor - Cannot read font bytes");
-            let ascii_image = ascii.as_image(&map, font, args.font_size).expect("Error - Cannot create ASCII image");
+            let ascii_image = ascii.as_image(&map, colour, font, args.font_size).expect("Error - Cannot create ASCII image");
             ascii_image.save(output_path).expect("Error - Cannot save ASCII image");
             println!("Success!");
         },
         
-        None => ascii.print(&map)
+        None => ascii.print(&map, colour)
     }
 
     Ok(())
