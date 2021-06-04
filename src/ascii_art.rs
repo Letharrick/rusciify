@@ -16,14 +16,6 @@ pub struct AsciiArt {
     pub dimensions: (usize, usize)
 }
 
-impl Index<(usize, usize)> for AsciiArt {
-    type Output = Cell;
-    
-    fn index(&self, index: (usize, usize)) -> &Self::Output {
-        &self.cells[index.0 + self.dimensions.0 * index.1]
-    }
-}
-
 impl AsciiArt {
     pub fn print(&self) -> Result<(), Box<dyn Error>> {
         let mut stdout = termcolor::StandardStream::stdout(ColorChoice::Always);
@@ -50,7 +42,7 @@ impl AsciiArt {
         Ok(())
     }
 
-    pub fn as_image(&self, font: Font, font_size: usize, background_colour: Option<Rgba<u8>>)
+    pub fn to_image(&self, font: Font, font_size: usize, background_colour: Option<Rgba<u8>>)
         -> Result<RgbaImage, Box<dyn Error>> {
         let font_scale = Scale::uniform(font_size as f32);
         let image_dimensions = (
@@ -84,6 +76,14 @@ impl AsciiArt {
         }
 
         Ok(image)
+    }
+}
+
+impl Index<(usize, usize)> for AsciiArt {
+    type Output = Cell;
+    
+    fn index(&self, index: (usize, usize)) -> &Self::Output {
+        &self.cells[index.0 + self.dimensions.0 * index.1]
     }
 }
 

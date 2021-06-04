@@ -71,13 +71,13 @@ fn main() -> CliResult {
         .build();
 
     if let Some(mut output_path) = args.output_path {
-        output_path.set_extension(".png");
+        output_path.set_extension("png");
 
         println!("Writing image...");
 
         let font = Font::try_from_bytes(FONT_BYTES).expect("Errzor - Failed to read font bytes");
 
-        let ascii_art = ascii.as_image(font, args.font_size, None).expect("Error - Failed to create ASCII image");
+        let ascii_art = ascii.to_image(font, args.font_size, None).expect("Error - Failed to create ASCII image");
         ascii_art.save(output_path).expect("Error - Failed to save ASCII image");
         
         println!("Done.");
