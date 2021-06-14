@@ -11,7 +11,6 @@ use std::path::PathBuf;
 use quicli::prelude::CliResult;
 use rusttype::Font;
 use structopt::StructOpt;
-use image::ImageFormat;
 
 const FONT_BYTES: &[u8] = include_bytes!("../../assets/Courier.ttf");
 
@@ -83,13 +82,11 @@ fn main() -> CliResult {
 
     // Save ASCII image or print ASCII
     if let Some(mut output_path) = args.output_path {
-        let input_path_extension = args.input_path.extension().expect("Failed to parse extension from input image path");
-        let ascii_image_format = ImageFormat::from_extension(input_path_extension).expect("Failed to infer image format");
         let font = Font::try_from_bytes(FONT_BYTES).expect("Failed to read font bytes");
         let ascii_art = ascii.to_image(font, args.font_size, None).expect("Failed to create ASCII image");
 
-        output_path.set_extension(input_path_extension);
-        ascii_art.save_with_format(output_path, ascii_image_format).expect("Failed to save ASCII image");
+        output_path.set_extension("png");
+        ascii_art.save(output_path).expect("Failed to save ASCII image");
     } else {
         ascii.print().expect("Failed to print");
     }
