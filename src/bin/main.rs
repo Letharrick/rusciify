@@ -12,7 +12,7 @@ use quicli::prelude::CliResult;
 use rusttype::Font;
 use structopt::StructOpt;
 
-const FONT_BYTES: &[u8] = include_bytes!("../../assets/Courier.ttf");
+const FONT_BYTES: &[u8] = include_bytes!("../../assets/arial.ttf");
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "Rusciify", about = "Convert images to ASCII")]
